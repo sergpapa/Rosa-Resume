@@ -13,7 +13,28 @@ function userInformationHTML(user) {
         </div>
         <p>Followers: ${user.followers} - Following: ${user.following} <br> Repos: ${user.public_repos}</p>
     </div>`
-}
+};
+
+function repoInformationHTML(repos) {
+    if (repos === 0) {
+        return `<div class="clearfix repo-list">No repos!</div>`;
+    }
+
+    var listItemsHTML = repos.map(function(repo) {
+        return `<li>
+                    <a href=""${repo.html_url} target="_blank">${repo.name}</a>
+                </li>`;
+    })
+
+    return `<div class="clearfix repo-list" >
+                <p>
+                    <strong>Repo List: </strong>
+                </p>
+                <ul>
+                    ${listItemsHTML.join("\n")}
+                </ul>
+            </div >`;
+};
 
 
 function fetchGitHubInformation() {
@@ -30,11 +51,14 @@ function fetchGitHubInformation() {
         `);
 
     $.when(
-        $.getJSON(`https://api.github.com/users/${username}`)    
+        $.getJSON(`https://api.github.com/users/${username}`),
+        $.getJSON(`https://api.github.com/users/${username}/repos`)    
     ).then(
-        function(response) {
-            var userData = response;
+        function(firstResponse, secondResponse) {
+            var userData = firstResponse[0];    // when having more than one calls they render as an array
+            var repoData = secondResponse[0];
             $("#gh-user-data").html(userInformationHTML(userData));
+            $("#gh-repo-data").html(repoInformationHTML(repoData));
         }, function(errorResponse) {
             if (errorResponse.status === 404) {
                 $("#gh-user-data").html(`<h2>No info found for ${username}</h2>`);
